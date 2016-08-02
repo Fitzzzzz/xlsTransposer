@@ -9,6 +9,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 
+
 /**
  * Different tools for reading and writing from a sheet to another
  * @author hamme
@@ -142,7 +143,21 @@ public class Tools {
 		}
 		return line;
 	}
-	
+	/**
+	 * Extracts certain following cells from a row from the {@link Tools#input}. 
+	 * Extracts Null as Blank.
+	 * Fills the comment array in parameter with the found commentaries.
+	 * @param rowId
+	 * 		The number of the row to extract cells from
+	 * @param start
+	 * 		The cell to start with
+	 * @param end
+	 * 		The last cell to extract
+	 * @param
+	 * 		The Comment array to fill with the commentaries
+	 * @return
+	 * 		The extracted cells in the form of an array of cells
+	 */
 	public Cell[] extractLine(int rowId, int start, int end, Comment[] comm) { 
 		
 		HSSFRow row = input.getRow(rowId);
@@ -152,6 +167,7 @@ public class Tools {
 			line[i - start] = row.getCell(i, Row.CREATE_NULL_AS_BLANK);
 			Comment comment = row.getCell(i, Row.CREATE_NULL_AS_BLANK).getCellComment();
 			if (comment != null) {
+				System.out.println("comm non nul");
 				comm[i - start] = comment;
 			 }
 		}

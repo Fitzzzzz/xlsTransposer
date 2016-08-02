@@ -110,6 +110,10 @@ public class SheetCouple {
 		this.outputCurrentLine++;
 	}
 	
+	/**
+	 * Number of lines (for the output) or cells (for the input) 
+	 * that were skipped because they were empty. Is incremented dynamically in {@link #writeBody()}.
+	 */
 	private int deletedValuesNb;
 	
 	public int getDeletedValuesNb() {
@@ -215,13 +219,14 @@ public class SheetCouple {
 		
 		// If the period is yearly
 		if (!isMonthly()) {
-			
+			System.out.println("non monthl");
 			// While EOF of the input has not been reached
 			while (!done) {
 				
 			    Comment[] comments = new Comment[inputFile.getLastPeriod() - serieNb + 1];
+			    
 			    outputFile.setLeftHeader(t.extractLine(j, 0, serieNb - 1));
-			    outputFile.setValues(t.extractLine(j, serieNb, inputFile.getLastPeriod()));
+			    outputFile.setValues(t.extractLine(j, serieNb, inputFile.getLastPeriod(), comments));
 			    outputFile.setRightHeader(t.extractLine(j, inputFile.getLastPeriod() + 1, inputFile.getLastColumn()));
 			    
 			    Cell[] line = new Cell[serieNb + 2 + outputFile.getRightHeader().length];
@@ -241,8 +246,10 @@ public class SheetCouple {
 				    	// Write the line
 				    	t.writeLine(serieNb + i + (j - serieNb)*outputFile.getValues().length - deletedValuesNb, line);
 			    	
-				    	if (comments[i] != null) {
-				    		insertComment(comments[i], serieNb + i + (j - serieNb)*outputFile.getValues().length - deletedValuesNb, serieNb + i);
+				    	// If the comment isn't empty, we analyze it for keywords and write it if needed
+				    	if (comments[i] != null) {				    		
+				    		System.out.println("comment non nul");
+				    		insertComment(comments[i], serieNb + i + (j - serieNb)*outputFile.getValues().length - deletedValuesNb);
 				    	}
 			    	}
 			    	// If the cell is blank
@@ -258,12 +265,13 @@ public class SheetCouple {
 		}
 		// If the period is monthly
 		else {
+
 			// While EOF of the input has not been reached
 			while (!done) {
 
 			    Comment[] comments = new Comment[inputFile.getLastPeriod() - serieNb + 1];
 			    outputFile.setLeftHeader(t.extractLine(j, 0, serieNb - 1));
-			    outputFile.setValues(t.extractLine(j, serieNb, inputFile.getLastPeriod()));
+			    outputFile.setValues(t.extractLine(j, serieNb, inputFile.getLastPeriod(), comments));
 			    outputFile.setRightHeader(t.extractLine(j, inputFile.getLastPeriod() + 1, inputFile.getLastColumn()));
 
 			    // For one line of the input :
@@ -279,8 +287,9 @@ public class SheetCouple {
 				    			outputFile.getValues()[i], 
 				    			outputFile.getRightHeader()
 				    			);
+				    	// If the comment isn't empty, we analyze it for keywords and write it if needed
 				    	if (comments[i] != null) {
-				    		insertComment(comments[i], j - deletedValuesNb, serieNb + i);
+				    		insertComment(comments[i],  serieNb + i + (j - serieNb)*outputFile.getValues().length - deletedValuesNb);
 				    	}
 			    	}
 			    	// If the cell is blank
@@ -295,7 +304,15 @@ public class SheetCouple {
 		}	
 	}
 	
-	public void insertComment(Comment comment, int rowId, int columnId) {
+	/**
+	 * Goes thru a comment looking for the keywords and writes the portion following 
+	 * a keyword in the output file at the given row.
+	 * @param comment
+	 * 		The comment to look thru
+	 * @param rowId
+	 * 		The row to write the comment in if needed
+	 */
+	public void insertComment(Comment comment, int rowId) {
 		
 		int commentIndex;
 		// If the period is monthly 
@@ -313,15 +330,18 @@ public class SheetCouple {
 	     
 		// If the source keyword has been detected.
 		if (commentR.getPosition("SOURCE:") != -1) {
+			System.out.println("Source found");
 			t.writeCell(outputRowId, commentIndex, commentR.getComment("SOURCE:"));
 		}
 		// If the comment keyword has been detected
 		if (commentR.getPosition("COMMENT:") != -1) {
 			t.writeCell(outputRowId, commentIndex + 1, commentR.getComment("COMMENT:"));
+			System.out.println("COMMENT found");
 		}
 		// If the statut keyword has been detected
 		if (commentR.getPosition("STATUT:") != -1) {	
 			t.writeCell(outputRowId, commentIndex + 2, commentR.getComment("STATUT:"));
+			System.out.println("STATUT found");
 		}
 		
 	}
